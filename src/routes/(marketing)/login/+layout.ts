@@ -1,15 +1,8 @@
-import { env as privateEnv } from "$env/dynamic/private"
-import { env as publicEnv } from "$env/dynamic/public"
 import {
   createBrowserClient,
   createServerClient,
   isBrowser,
 } from "@supabase/ssr"
-
-const PUBLIC_SUPABASE_URL =
-  publicEnv.PUBLIC_SUPABASE_URL ?? privateEnv.SUPABASE_URL ?? ""
-const PUBLIC_SUPABASE_ANON_KEY =
-  publicEnv.PUBLIC_SUPABASE_ANON_KEY ?? privateEnv.SUPABASE_ANON_KEY ?? ""
 import { redirect } from "@sveltejs/kit"
 import { load_helper } from "$lib/load_helpers.js"
 
@@ -17,15 +10,11 @@ export const load = async ({ fetch, data, depends }) => {
   depends("supabase:auth")
 
   const supabase = isBrowser()
-    ? createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
-        global: {
-          fetch,
-        },
+    ? createBrowserClient(data.supabaseUrl, data.supabaseAnonKey, {
+        global: { fetch },
       })
-    : createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
-        global: {
-          fetch,
-        },
+    : createServerClient(data.supabaseUrl, data.supabaseAnonKey, {
+        global: { fetch },
         cookies: {
           getAll() {
             return data.cookies

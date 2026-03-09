@@ -1,15 +1,8 @@
-import { env as privateEnv } from "$env/dynamic/private"
-import { env as publicEnv } from "$env/dynamic/public"
 import {
   createBrowserClient,
   createServerClient,
   isBrowser,
 } from "@supabase/ssr"
-
-const PUBLIC_SUPABASE_URL =
-  publicEnv.PUBLIC_SUPABASE_URL ?? privateEnv.SUPABASE_URL ?? ""
-const PUBLIC_SUPABASE_ANON_KEY =
-  publicEnv.PUBLIC_SUPABASE_ANON_KEY ?? privateEnv.SUPABASE_ANON_KEY ?? ""
 import { redirect } from "@sveltejs/kit"
 import type { Database } from "../../../DatabaseDefinitions.js"
 import { CreateProfileStep } from "../../../config"
@@ -19,15 +12,11 @@ export const load = async ({ fetch, data, depends, url }) => {
   depends("supabase:auth")
 
   const supabase = isBrowser()
-    ? createBrowserClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
-        global: {
-          fetch,
-        },
+    ? createBrowserClient<Database>(data.supabaseUrl, data.supabaseAnonKey, {
+        global: { fetch },
       })
-    : createServerClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, {
-        global: {
-          fetch,
-        },
+    : createServerClient<Database>(data.supabaseUrl, data.supabaseAnonKey, {
+        global: { fetch },
         cookies: {
           getAll() {
             return data.cookies
@@ -72,18 +61,9 @@ export const load = async ({ fetch, data, depends, url }) => {
 export const _hasFullProfile = (
   profile: Database["public"]["Tables"]["profiles"]["Row"] | null,
 ) => {
-  if (!profile) {
-    return false
-  }
-  if (!profile.full_name) {
-    return false
-  }
-  if (!profile.company_name) {
-    return false
-  }
-  if (!profile.website) {
-    return false
-  }
-
+  if (!profile) return false
+  if (!profile.full_name) return false
+  if (!profile.company_name) return false
+  if (!profile.website) return false
   return true
 }
