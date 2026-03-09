@@ -1,18 +1,31 @@
 // src/hooks.server.ts
-import { PRIVATE_SUPABASE_SERVICE_ROLE } from "$env/static/private"
-import {
-  PUBLIC_SUPABASE_ANON_KEY,
-  PUBLIC_SUPABASE_URL,
-} from "$env/static/public"
+import { env as privateEnv } from "$env/dynamic/private"
+import { env as publicEnv } from "$env/dynamic/public"
 import { createServerClient } from "@supabase/ssr"
 import { createClient, type AMREntry } from "@supabase/supabase-js"
 import type { Handle } from "@sveltejs/kit"
 import { sequence } from "@sveltejs/kit/hooks"
 
+const SUPABASE_URL = publicEnv.PUBLIC_SUPABASE_URL ?? ""
+const SUPABASE_ANON_KEY = publicEnv.PUBLIC_SUPABASE_ANON_KEY ?? ""
+const SUPABASE_SERVICE_ROLE = privateEnv.PRIVATE_SUPABASE_SERVICE_ROLE ?? ""
+
 export const supabase: Handle = async ({ event, resolve }) => {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.warn(
+      "[v0] Supabase env vars are not set. Please add PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY, and PRIVATE_SUPABASE_SERVICE_ROLE to your environment.",
+    )
+    event.locals.safeGetSession = async () => ({
+      session: null,
+      user: null,
+      amr: null,
+    })
+    return resolve(event)
+  }
+
   event.locals.supabase = createServerClient(
-    PUBLIC_SUPABASE_URL,
-    PUBLIC_SUPABASE_ANON_KEY,
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll: () => event.cookies.getAll(),
@@ -37,8 +50,8 @@ export const supabase: Handle = async ({ event, resolve }) => {
   )
 
   event.locals.supabaseServiceRole = createClient(
-    PUBLIC_SUPABASE_URL,
-    PRIVATE_SUPABASE_SERVICE_ROLE,
+    SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE,
     { auth: { persistSession: false } },
   )
 
