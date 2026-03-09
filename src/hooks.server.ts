@@ -6,9 +6,14 @@ import { createClient, type AMREntry } from "@supabase/supabase-js"
 import type { Handle } from "@sveltejs/kit"
 import { sequence } from "@sveltejs/kit/hooks"
 
-const SUPABASE_URL = publicEnv.PUBLIC_SUPABASE_URL ?? ""
-const SUPABASE_ANON_KEY = publicEnv.PUBLIC_SUPABASE_ANON_KEY ?? ""
-const SUPABASE_SERVICE_ROLE = privateEnv.PRIVATE_SUPABASE_SERVICE_ROLE ?? ""
+const SUPABASE_URL =
+  publicEnv.PUBLIC_SUPABASE_URL ?? privateEnv.SUPABASE_URL ?? ""
+const SUPABASE_ANON_KEY =
+  publicEnv.PUBLIC_SUPABASE_ANON_KEY ?? privateEnv.SUPABASE_ANON_KEY ?? ""
+const SUPABASE_SERVICE_ROLE =
+  privateEnv.PRIVATE_SUPABASE_SERVICE_ROLE ??
+  privateEnv.SUPABASE_SERVICE_ROLE_KEY ??
+  ""
 
 export const supabase: Handle = async ({ event, resolve }) => {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {

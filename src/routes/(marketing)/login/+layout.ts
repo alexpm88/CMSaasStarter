@@ -1,12 +1,15 @@
-import {
-  PUBLIC_SUPABASE_ANON_KEY,
-  PUBLIC_SUPABASE_URL,
-} from "$env/static/public"
+import { env as privateEnv } from "$env/dynamic/private"
+import { env as publicEnv } from "$env/dynamic/public"
 import {
   createBrowserClient,
   createServerClient,
   isBrowser,
 } from "@supabase/ssr"
+
+const PUBLIC_SUPABASE_URL =
+  publicEnv.PUBLIC_SUPABASE_URL ?? privateEnv.SUPABASE_URL ?? ""
+const PUBLIC_SUPABASE_ANON_KEY =
+  publicEnv.PUBLIC_SUPABASE_ANON_KEY ?? privateEnv.SUPABASE_ANON_KEY ?? ""
 import { redirect } from "@sveltejs/kit"
 import { load_helper } from "$lib/load_helpers.js"
 
