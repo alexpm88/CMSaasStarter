@@ -1,10 +1,13 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js"
 import type { Database } from "../../../DatabaseDefinitions"
 
-import { PRIVATE_STRIPE_API_KEY } from "$env/static/private"
+import { env } from "$env/dynamic/private"
 import Stripe from "stripe"
 import { pricingPlans } from "../../(marketing)/pricing/pricing_plans"
-const stripe = new Stripe(PRIVATE_STRIPE_API_KEY, { apiVersion: "2023-08-16" })
+const stripe = new Stripe(
+  env.PRIVATE_STRIPE_API_KEY ?? env.STRIPE_SECRET_KEY ?? "",
+  { apiVersion: "2023-08-16" },
+)
 
 export const getOrCreateCustomerId = async ({
   supabaseServiceRole,
