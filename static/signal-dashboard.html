@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>DXY vs XAUUSD — Live Signal Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#07090d;--surface:#0d1117;--s2:#111820;--border:#1c2333;
+  --text:#c9d1d9;--muted:#484f58;
+  --gold:#f0b429;--gdim:rgba(240,180,41,.13);
+  --dxy:#58a6ff;--ddim:rgba(88,166,255,.11);
+  --green:#3fb950;--grdim:rgba(63,185,80,.1);
+  --red:#f85149;--rdim:rgba(248,81,73,.1);
+  --sig:#bc8cff;--sdim:rgba(188,140,255,.12);
+  --orange:#e3702a;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;overflow-x:hidden;min-height:100vh;}
+
+/* LOADING */
+#ov{position:fixed;inset:0;background:rgba(7,9,13,.95);z-index:999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .5s;}
+#ov.hidden{opacity:0;pointer-events:none;}
+.ring{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--gold);
+  border-radius:50%;animation:spin .75s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#ov-msg{font-family:'Syne',sans-serif;font-size:.9rem;color:var(--text);}
+#ov-sub{font-size:.63rem;color:var(--muted);max-width:340px;text-align:center;line-height:1.5;}
+.ov-bar{width:260px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:4px;}
+#ov-prog{height:100%;background:var(--gold);border-radius:2px;transition:width .4s;width:0%;}
+
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  padding:12px 24px;border-bottom:1px solid var(--border);
+  background:rgba(13,17,23,.97);position:sticky;top:0;z-index:200;}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;
+  display:flex;align-items:center;gap:9px;}
+.ldot{width:8px;height:8px;border-radius:50%;background:var(--gold);
+  box-shadow:0 0 8px var(--gold);animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.logo span{color:var(--gold);}
+.badges{display:flex;gap:6px;flex-wrap:wrap;}
+.badge{font-size:.59rem;padding:2px 8px;border-radius:20px;border:1px solid;
+  font-weight:600;letter-spacing:.06em;text-transform:uppercase;}
+.bg {color:var(--gold); border-color:var(--gold); background:var(--gdim);}
+.bd {color:var(--dxy);  border-color:var(--dxy);  background:var(--ddim);}
+.bs {color:var(--sig);  border-color:var(--sig);  background:var(--sdim);}
+.bl {color:var(--green);border-color:var(--green);background:var(--grdim);animation:blink 1.4s ease-in-out infinite;}
+.be {color:var(--red);  border-color:var(--red);  background:var(--rdim);}
+
+/* API STATUS BAR */
+#apibar{display:flex;align-items:center;gap:10px;padding:6px 24px;
+  background:var(--s2);border-bottom:1px solid var(--border);font-size:.62rem;flex-wrap:wrap;}
+.apill{display:flex;align-items:center;gap:5px;padding:2px 9px;
+  border-radius:10px;border:1px solid var(--border);background:rgba(0,0,0,.25);}
+.adot{width:5px;height:5px;border-radius:50%;background:var(--muted);}
+.adot.ok{background:var(--green);box-shadow:0 0 4px var(--green);}
+.adot.err{background:var(--red);}
+.adot.spin{background:var(--gold);animation:blink .9s ease-in-out infinite;}
+#apimsg{margin-left:auto;color:var(--muted);}
+#rcount{color:var(--gold);margin-left:8px;}
+#lfetch{color:var(--muted);margin-left:8px;}
+
+/* TICKER */
+.trow{display:grid;grid-template-columns:repeat(5,1fr);
+  border-bottom:1px solid var(--border);background:var(--surface);}
+.tc{padding:9px 16px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:2px;}
+.tc:last-child{border-right:none;}
+.tl{font-size:.56rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.tv{font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;}
+.ts{font-size:.58rem;}
+.cg{color:var(--gold);}.cd{color:var(--dxy);}.cs{color:var(--sig);}
+.cgr{color:var(--green);}.cm{color:var(--muted);}
+.pos{color:var(--green);}.neg{color:var(--red);}
+
+/* CONTROLS */
+.ctrl{display:flex;align-items:center;gap:10px;padding:8px 24px;
+  background:var(--s2);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.cl{font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;}
+.bg-g{display:flex;gap:2px;}
+.btn{background:transparent;border:1px solid var(--border);color:var(--muted);
+  font-family:'JetBrains Mono',monospace;font-size:.67rem;padding:3px 9px;
+  cursor:pointer;border-radius:4px;transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--gold);color:var(--gold);}
+.btn.active{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700;}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.sp{width:1px;height:16px;background:var(--border);}
+.btn-fetch{background:linear-gradient(135deg,#3fb950,#2ea043);border:none;color:#fff;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.67rem;padding:4px 12px;
+  cursor:pointer;border-radius:4px;transition:opacity .15s;white-space:nowrap;}
+.btn-fetch:hover{opacity:.8;}.btn-fetch:disabled{opacity:.35;cursor:not-allowed;}
+.btn-run{background:linear-gradient(135deg,var(--gold),#e09d18);border:none;color:#000;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.67rem;padding:4px 12px;
+  cursor:pointer;border-radius:4px;transition:opacity .15s;white-space:nowrap;}
+.btn-run:hover{opacity:.8;}
+
+/* MAIN */
+.main{padding:14px 24px;display:flex;flex-direction:column;gap:14px;}
+
+/* ALERT */
+#alertbox{display:none;padding:12px 16px;border-radius:7px;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.75rem;letter-spacing:.03em;}
+#alertbox.buy{background:rgba(63,185,80,.12);border:2px solid var(--green);color:var(--green);
+  animation:blink 1s ease-in-out infinite;}
+#alertbox.wait{background:rgba(240,180,41,.08);border:1px solid var(--gold);color:var(--gold);}
+#alertbox.off{display:none!important;}
+
+/* STATS */
+.sgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:7px;
+  padding:11px 13px;display:flex;flex-direction:column;gap:3px;}
+.sl{font-size:.56rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;}
+.sv{font-family:'Syne',sans-serif;font-size:1.45rem;font-weight:800;}
+.ss{font-size:.57rem;color:var(--muted);}
+
+/* SECTION */
+.shd{font-family:'Syne',sans-serif;font-size:.66rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.1em;color:var(--muted);
+  display:flex;align-items:center;gap:8px;}
+.shd::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* CHART CARDS */
+.crow{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.cc{background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;overflow:hidden;display:flex;flex-direction:column;}
+.ch{display:flex;align-items:center;justify-content:space-between;
+  padding:7px 12px;border-bottom:1px solid var(--border);background:var(--s2);}
+.cht{font-family:'Syne',sans-serif;font-weight:700;font-size:.76rem;}
+.chs{font-size:.57rem;color:var(--muted);margin-top:1px;}
+
+/* TV widget height */
+.tvw{height:340px;}
+.tvw .tradingview-widget-container{height:100%!important;width:100%!important;}
+.tvw .tradingview-widget-container__widget{height:calc(100% - 20px)!important;width:100%!important;}
+.tvw .tradingview-widget-copyright{font-size:.5rem;padding:2px 7px;background:var(--s2);color:var(--muted);}
+.tvw .tradingview-widget-copyright a{color:var(--dxy);text-decoration:none;}
+
+.sigcard{border:1px solid var(--border);border-radius:8px;overflow:hidden;
+  background:var(--surface);display:flex;flex-direction:column;}
+.sigw{height:400px;}
+.sigw .tradingview-widget-container{height:100%!important;width:100%!important;}
+.sigw .tradingview-widget-container__widget{height:calc(100% - 20px)!important;width:100%!important;}
+.sigw .tradingview-widget-copyright{font-size:.5rem;padding:2px 7px;background:var(--s2);color:var(--muted);}
+.sigw .tradingview-widget-copyright a{color:var(--dxy);text-decoration:none;}
+
+/* EXPLAINER */
+.expl{background:var(--surface);border:1px solid var(--border);border-radius:7px;
+  padding:12px 16px;display:flex;gap:14px;flex-wrap:wrap;}
+.eb{display:flex;flex-direction:column;gap:2px;flex:1;min-width:110px;}
+.el{font-size:.55rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;}
+.ev{font-family:'Syne',sans-serif;font-size:.84rem;font-weight:700;}
+.ed{font-size:.58rem;color:var(--muted);line-height:1.45;}
+
+/* NOTE */
+.note{background:rgba(88,166,255,.05);border:1px solid rgba(88,166,255,.15);
+  border-radius:6px;padding:9px 13px;font-size:.61rem;color:var(--muted);line-height:1.65;}
+.note strong{color:var(--dxy);}
+.note code{background:rgba(255,255,255,.07);padding:1px 4px;border-radius:3px;font-size:.59rem;color:var(--text);}
+
+/* BACKTEST */
+.btcard{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.bth{padding:9px 14px;border-bottom:1px solid var(--border);background:var(--s2);
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.76rem;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;}
+.btsum{font-size:.6rem;color:var(--muted);font-family:'JetBrains Mono',monospace;font-weight:400;}
+.dstag{font-size:.58rem;padding:2px 7px;border-radius:10px;font-weight:600;border:1px solid;}
+.ds-real{color:var(--green);border-color:var(--green);background:var(--grdim);}
+.ds-sim {color:var(--orange);border-color:var(--orange);background:rgba(227,112,42,.1);}
+#eqcv{width:100%;height:110px;display:block;background:var(--surface);}
+table{width:100%;border-collapse:collapse;font-size:.63rem;}
+thead th{padding:5px 11px;text-align:left;color:var(--muted);font-weight:400;
+  border-bottom:1px solid var(--border);white-space:nowrap;
+  text-transform:uppercase;letter-spacing:.06em;font-size:.55rem;background:var(--s2);}
+tbody tr{border-bottom:1px solid rgba(28,35,51,.4);transition:background .1s;}
+tbody tr:hover{background:rgba(255,255,255,.02);}
+tbody td{padding:5px 11px;}
+.tp{color:var(--green);font-weight:600;}.sl2{color:var(--red);font-weight:600;}
+.ex{color:var(--muted);}.pp{color:var(--green);}.pn{color:var(--red);}
+
+footer{text-align:center;padding:12px;color:var(--muted);font-size:.57rem;
+  border-top:1px solid var(--border);margin-top:6px;}
+footer a{color:var(--dxy);text-decoration:none;}
+
+@media(max-width:880px){
+  .crow{grid-template-columns:1fr;}
+  .sgrid{grid-template-columns:repeat(3,1fr);}
+  .trow{grid-template-columns:repeat(3,1fr);}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="ov">
+  <div class="ring"></div>
+  <div id="ov-msg">Conectando APIs...</div>
+  <div id="ov-sub">Twelve Data · Alpha Vantage · Polygon.io · FRED</div>
+  <div class="ov-bar"><div id="ov-prog"></div></div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo"><div class="ldot"></div>DXY vs <span>XAUUSD</span> · Night Signal</div>
+  <div class="badges">
+    <span class="badge bd">TVC:DXY</span>
+    <span class="badge bg">XAU/USD</span>
+    <span class="badge bs">21:00–23:00 UTC</span>
+    <span class="badge bl" id="livebadge">● LIVE</span>
+  </div>
+</header>
+
+<!-- API STATUS BAR -->
+<div id="apibar">
+  <div class="apill"><div class="adot spin" id="d-td"></div><span>Twelve Data</span></div>
+  <div class="apill"><div class="adot" id="d-av"></div><span>Alpha Vantage</span></div>
+  <div class="apill"><div class="adot" id="d-py"></div><span>Polygon.io</span></div>
+  <div class="apill"><div class="adot" id="d-fr"></div><span>FRED</span></div>
+  <span id="lfetch">último fetch: —</span>
+  <span id="rcount">créditos: —</span>
+  <span id="apimsg" style="margin-left:auto;">inicializando...</span>
+</div>
+
+<!-- TICKER -->
+<div class="trow">
+  <div class="tc"><span class="tl">XAU/USD último</span>
+    <span class="tv cg" id="tk-g">—</span><span class="ts" id="tk-gc">—</span></div>
+  <div class="tc"><span class="tl">DXY (Twelve Data)</span>
+    <span class="tv cd" id="tk-d">—</span><span class="ts" id="tk-dc">—</span></div>
+  <div class="tc"><span class="tl">Timeframe activo</span>
+    <span class="tv cs" id="tk-tf">30m</span>
+    <span class="ts cm">sesión 21–23 UTC</span></div>
+  <div class="tc"><span class="tl">Barras cargadas</span>
+    <span class="tv cg" id="tk-bars">—</span>
+    <span class="ts cm" id="tk-rng">cargando...</span></div>
+  <div class="tc"><span class="tl">Señales (30d reales)</span>
+    <span class="tv cg" id="tk-sig">—</span>
+    <span class="ts cm" id="tk-wr">WR: —</span></div>
+</div>
+
+<!-- CONTROLS -->
+<div class="ctrl">
+  <span class="cl">TF:</span>
+  <div class="bg-g" id="tg">
+    <button class="btn" data-tf="15">15m</button>
+    <button class="btn active" data-tf="30">30m</button>
+    <button class="btn" data-tf="60">1H</button>
+  </div>
+  <div class="sp"></div>
+  <span class="cl">SL:</span>
+  <div class="bg-g" id="slg">
+    <button class="btn" data-sl="1.5">1.5×</button>
+    <button class="btn active" data-sl="2">2×</button>
+    <button class="btn" data-sl="2.5">2.5×</button>
+  </div>
+  <div class="sp"></div>
+  <span class="cl">TP:</span>
+  <div class="bg-g" id="tpg">
+    <button class="btn" data-tp="2">2×</button>
+    <button class="btn active" data-tp="3">3×</button>
+    <button class="btn" data-tp="4">4×</button>
+  </div>
+  <div class="sp"></div>
+  <span class="cl">Exp:</span>
+  <div class="bg-g" id="exg">
+    <button class="btn" data-exp="3">3v</button>
+    <button class="btn active" data-exp="5">5v</button>
+    <button class="btn" data-exp="8">8v</button>
+  </div>
+  <div class="sp"></div>
+  <button class="btn-fetch" id="btnf" onclick="fetchAll()">⬇ FETCH REAL</button>
+  <button class="btn-run" onclick="runBT()">↻ RECALCULAR</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ALERT -->
+  <div id="alertbox"></div>
+
+  <!-- STATS -->
+  <div class="sgrid">
+    <div class="stat"><span class="sl">Señales totales</span>
+      <span class="sv cg" id="s-tot">—</span><span class="ss">30 días reales</span></div>
+    <div class="stat"><span class="sl">TP hit</span>
+      <span class="sv cgr" id="s-tp">—</span><span class="ss">Take profit</span></div>
+    <div class="stat"><span class="sl">SL hit</span>
+      <span class="sv" style="color:var(--red)" id="s-sl">—</span><span class="ss">Stop loss</span></div>
+    <div class="stat"><span class="sl">Expiradas</span>
+      <span class="sv cm" id="s-ex">—</span><span class="ss">Time exit</span></div>
+    <div class="stat"><span class="sl">Win Rate</span>
+      <span class="sv cgr" id="s-wr">—</span><span class="ss">TP÷(TP+SL)</span></div>
+    <div class="stat"><span class="sl">Profit Factor</span>
+      <span class="sv cg" id="s-pf">—</span><span class="ss">reward÷risk</span></div>
+  </div>
+
+  <!-- LIVE TV CHARTS -->
+  <div class="shd">📡 Gráficos Live — TradingView Widgets (datos reales)</div>
+  <div class="crow">
+
+    <!-- DXY -->
+    <div class="cc">
+      <div class="ch">
+        <div><div class="cht" style="color:var(--dxy)">📈 DXY — US Dollar Index</div>
+          <div class="chs">TVC:DXY · TradingView real-time</div></div>
+        <span class="badge bd" id="lbl-d">30m</span>
+      </div>
+      <div class="tvw" id="wd">
+        <div class="tradingview-widget-container" style="height:100%;width:100%">
+          <div class="tradingview-widget-container__widget" style="height:calc(100% - 20px);width:100%"></div>
+          <div class="tradingview-widget-copyright">
+            <a href="https://www.tradingview.com/symbols/TVC-DXY/" rel="noopener nofollow" target="_blank">
+              <span class="blue-text">DXY chart</span></a> by TradingView</div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+          {"autosize":true,"symbol":"TVC:DXY","interval":"30","timezone":"Etc/UTC","theme":"dark","style":"1","locale":"en",
+           "backgroundColor":"rgba(13,17,23,1)","gridColor":"rgba(28,35,51,0.6)","allow_symbol_change":false,
+           "calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":false,
+           "hide_legend":false,"hide_volume":false,"hotlist":false,"save_image":false,
+           "withdateranges":true,"compareSymbols":[],"studies":[],"watchlist":[]}
+          </script>
+        </div>
+      </div>
+    </div>
+
+    <!-- GOLD -->
+    <div class="cc">
+      <div class="ch">
+        <div><div class="cht" style="color:var(--gold)">🥇 GOLD — Spot vs USD</div>
+          <div class="chs">TVC:GOLD · TradingView real-time</div></div>
+        <span class="badge bg" id="lbl-g">30m</span>
+      </div>
+      <div class="tvw" id="wg">
+        <div class="tradingview-widget-container" style="height:100%;width:100%">
+          <div class="tradingview-widget-container__widget" style="height:calc(100% - 20px);width:100%"></div>
+          <div class="tradingview-widget-copyright">
+            <a href="https://www.tradingview.com/symbols/TVC-GOLD/" rel="noopener nofollow" target="_blank">
+              <span class="blue-text">GOLD chart</span></a> by TradingView</div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+          {"autosize":true,"symbol":"TVC:GOLD","interval":"30","timezone":"Etc/UTC","theme":"dark","style":"1","locale":"en",
+           "backgroundColor":"rgba(13,17,23,1)","gridColor":"rgba(28,35,51,0.6)","allow_symbol_change":false,
+           "calendar":false,"details":false,"hide_side_toolbar":true,"hide_top_toolbar":false,
+           "hide_legend":false,"hide_volume":false,"hotlist":false,"save_image":false,
+           "withdateranges":true,"compareSymbols":[],"studies":[],"watchlist":[]}
+          </script>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SIGNAL CHART -->
+  <div class="shd">⚡ Señales — GOLD + DXY overlay (escala dual)</div>
+  <div class="sigcard">
+    <div class="ch">
+      <div>
+        <div class="cht" style="color:var(--sig)">⚡ TVC:GOLD + TVC:DXY — Detecta ambas rojas 21–23 UTC → BUY GOLD</div>
+        <div class="chs">Gold escala izq · DXY pane inferior · zoom a zona nocturna para identificar señales</div>
+      </div>
+      <span class="badge bs" id="lbl-s">30m</span>
+    </div>
+    <div class="sigw" id="ws">
+      <div class="tradingview-widget-container" style="height:100%;width:100%">
+        <div class="tradingview-widget-container__widget" style="height:calc(100% - 20px);width:100%"></div>
+        <div class="tradingview-widget-copyright">
+          <a href="https://www.tradingview.com/symbols/TVC-GOLD/" rel="noopener nofollow" target="_blank">
+            <span class="blue-text">GOLD+DXY chart</span></a> by TradingView</div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+        {"autosize":true,"symbol":"TVC:GOLD","interval":"30","timezone":"Etc/UTC","theme":"dark","style":"1","locale":"en",
+         "backgroundColor":"rgba(7,9,13,1)","gridColor":"rgba(28,35,51,0.5)","allow_symbol_change":false,
+         "calendar":false,"details":false,"hide_side_toolbar":false,"hide_top_toolbar":false,
+         "hide_legend":false,"hide_volume":false,"hotlist":false,"save_image":true,"withdateranges":true,
+         "compareSymbols":[{"symbol":"TVC:DXY","position":"NewPriceScale"}],"studies":[],"watchlist":[]}
+        </script>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPLAINER -->
+  <div class="expl">
+    <div class="eb"><span class="el">Señal</span>
+      <span class="ev" style="color:var(--sig)">DXY🔴 + GOLD🔴</span>
+      <span class="ed">Ambas rojas 21–23 UTC</span></div>
+    <div class="eb"><span class="el">DXY fuente</span>
+      <span class="ev cd">Twelve Data</span>
+      <span class="ed">DXY directo como índice</span></div>
+    <div class="eb"><span class="el">Gold fuente</span>
+      <span class="ev cg">Twelve Data</span>
+      <span class="ed">XAU/USD spot OHLC</span></div>
+    <div class="eb"><span class="el">Entrada</span>
+      <span class="ev cg">Open sig. vela</span>
+      <span class="ed">Open de la vela siguiente</span></div>
+    <div class="eb"><span class="el">Stop Loss</span>
+      <span class="ev" style="color:var(--red)" id="sl-exp">2× vela</span>
+      <span class="ed">Entry − cuerpo × SL mult.</span></div>
+    <div class="eb"><span class="el">Take Profit</span>
+      <span class="ev cgr" id="tp-exp">3× vela</span>
+      <span class="ed">Entry + cuerpo × TP mult.</span></div>
+    <div class="eb"><span class="el">Cierre forzado</span>
+      <span class="ev cm" id="exp-exp">5 velas</span>
+      <span class="ed">Al close de la Nª vela</span></div>
+    <div class="eb"><span class="el">Refresh live</span>
+      <span class="ev" style="color:var(--orange)" id="poll-info">c/ 30m</span>
+      <span class="ed">En sesión 21–23 UTC</span></div>
+  </div>
+
+  <!-- NOTE -->
+  <div class="note">
+    <strong>ℹ️ Datos reales:</strong>
+    Backtesting usa <strong>Twelve Data</strong> (<code>api.twelvedata.com/time_series</code>) con
+    <code>XAU/USD</code> (Gold directo) y <code>DXY</code> como índice disponible en su catálogo.
+    Free tier: <strong>800 créditos/día</strong>, 8 req/min — los datos se cachean en memoria y
+    <code>localStorage</code>. Fallback a <strong>Alpha Vantage</strong> → <strong>Polygon.io</strong> si hay rate limit.
+    Los gráficos TV son reales e independientes de las APIs del backtesting.
+    <strong>DXY en Twelve Data</strong>: símbolo <code>DXY</code>, tipo índice — datos OHLC reales.
+  </div>
+
+  <!-- BACKTEST -->
+  <div class="shd">📋 Backtesting — Datos Reales Twelve Data</div>
+  <div class="btcard">
+    <div class="bth">
+      <span>Historial de Operaciones &nbsp;<span class="dstag ds-sim" id="dstag">⚡ SIM</span></span>
+      <span class="btsum" id="btsum">cargando datos reales...</span>
+    </div>
+    <canvas id="eqcv"></canvas>
+    <div style="overflow-x:auto;max-height:380px;overflow-y:auto;">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Fecha señal UTC</th><th>TF</th>
+          <th>Entrada $</th><th>SL $</th><th>TP $</th>
+          <th>Vela pts</th><th>DXY vela</th>
+          <th>Resultado</th><th>Velas</th>
+          <th>P&amp;L pts</th><th>Equity acum.</th>
+        </tr></thead>
+        <tbody id="tbt"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<footer>
+  Gráficos live: <a href="https://www.tradingview.com/widget/" target="_blank">TradingView Advanced Chart</a> ·
+  Datos backtest: <a href="https://twelvedata.com" target="_blank">Twelve Data API</a> ·
+  Fallback: Alpha Vantage · Polygon.io · FRED
+</footer>
+
+<!-- ═══════════════ JAVASCRIPT ═══════════════ -->
+<script>
+'use strict';
+
+// ─────────────────────────────────────────────
+//  API KEYS
+// ─────────────────────────────────────────────
+const KEYS = {
+  td:   '26393491e87f4bbd8ea4ac1a83d511e7',   // Twelve Data
+  av:   'NF2Y5P3S2AF65EQ5',                    // Alpha Vantage
+  poly: 'cUevvGyM0svpRWDGaMqFqoQhobOU_2pH',    // Polygon.io
+  fred: '62d1746c839c72eace4e76817e51be82',    // FRED (macro context)
+};
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let TF=30, SL=2, TP=3, EXP=5;
+let goldBars=[], dxyBars=[];
+let dataSource='sim';
+let polling=null;
+let creditsUsed=0;
+
+const TF_TV ={15:'15',30:'30',60:'60'};
+const TF_TD ={15:'15min',30:'30min',60:'1h'};
+const TF_AV ={15:'15min',30:'30min',60:'60min'};
+
+// ─────────────────────────────────────────────
+//  CACHE  (localStorage, 15-min TTL)
+// ─────────────────────────────────────────────
+const CACHE_TTL = 15*60*1000; // 15 min in ms
+
+function cacheSet(key, data){
+  try{localStorage.setItem(key, JSON.stringify({ts:Date.now(), data}));}catch(e){}
+}
+function cacheGet(key){
+  try{
+    const raw=localStorage.getItem(key);
+    if(!raw)return null;
+    const obj=JSON.parse(raw);
+    if(Date.now()-obj.ts > CACHE_TTL) return null;
+    return obj.data;
+  }catch(e){return null;}
+}
+
+// ─────────────────────────────────────────────
+//  TWELVE DATA — primary source
+// ─────────────────────────────────────────────
+async function tdFetch(symbol, interval, outputsize=5000){
+  const cacheKey=`td_${symbol}_${interval}`;
+  const cached=cacheGet(cacheKey);
+  if(cached){ setMsg(`Cache hit: ${symbol}`); return cached; }
+
+  const url=`https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=${outputsize}&timezone=UTC&apikey=${KEYS.td}`;
+  setDot('d-td','spin');
+  const res=await fetch(url);
+  if(!res.ok) throw new Error(`TD HTTP ${res.status}`);
+  const json=await res.json();
+  if(json.status==='error') throw new Error('TD: '+json.message);
+  creditsUsed++;
+  $('rcount').textContent=`créditos TD hoy: ~${creditsUsed*2}/800`;
+  cacheSet(cacheKey, json);
+  setDot('d-td','ok');
+  return json;
+}
+
+function parseTD(json){
+  if(!json.values) throw new Error('No values in TD response');
+  const cutoff=Date.now()/1000 - 31*24*3600;
+  return json.values
+    .map(v=>({
+      time: Math.floor(new Date(v.datetime.replace(' ','T')+'Z').getTime()/1000),
+      open:  parseFloat(v.open),
+      high:  parseFloat(v.high),
+      low:   parseFloat(v.low),
+      close: parseFloat(v.close),
+    }))
+    .filter(b=>b.time>=cutoff && !isNaN(b.open))
+    .sort((a,b)=>a.time-b.time);
+}
+
+// ─────────────────────────────────────────────
+//  ALPHA VANTAGE — fallback
+// ─────────────────────────────────────────────
+async function avFetch(fromSym, toSym, interval){
+  const cacheKey=`av_${fromSym}${toSym}_${interval}`;
+  const cached=cacheGet(cacheKey);
+  if(cached){setMsg(`AV cache: ${fromSym}/${toSym}`);return cached;}
+
+  const url=`https://www.alphavantage.co/query?function=FX_INTRADAY&from_symbol=${fromSym}&to_symbol=${toSym}&interval=${interval}&outputsize=full&apikey=${KEYS.av}`;
+  setDot('d-av','spin');
+  const res=await fetch(url);
+  const json=await res.json();
+  if(json['Note']||json['Information']) throw new Error('AV rate limit');
+  cacheSet(cacheKey,json);
+  setDot('d-av','ok');
+  return json;
+}
+
+function parseAV(json, interval){
+  const key=`Time Series FX (${interval})`;
+  const ts=json[key];
+  if(!ts) throw new Error('AV: no time series for interval '+interval);
+  const cutoff=Date.now()/1000-31*24*3600;
+  return Object.entries(ts)
+    .map(([t,v])=>({
+      time:Math.floor(new Date(t.replace(' ','T')+'Z').getTime()/1000),
+      open:parseFloat(v['1. open']),high:parseFloat(v['2. high']),
+      low:parseFloat(v['3. low']),close:parseFloat(v['4. close']),
+    }))
+    .filter(b=>b.time>=cutoff && !isNaN(b.open))
+    .sort((a,b)=>a.time-b.time);
+}
+
+// Invert EUR/USD to get DXY proxy
+function invertBars(bars){
+  return bars.map(b=>({
+    time:b.time, open:+(1/b.open).toFixed(5), close:+(1/b.close).toFixed(5),
+    high:+(1/b.low).toFixed(5), low:+(1/b.high).toFixed(5),
+  }));
+}
+
+// ─────────────────────────────────────────────
+//  POLYGON — fallback for gold
+// ─────────────────────────────────────────────
+async function polyFetch(ticker, interval){
+  // Polygon uses multiplier/timespan
+  const mult={15:15,30:30,60:1}[interval]||30;
+  const tspan=interval===60?'hour':'minute';
+  const to=new Date().toISOString().slice(0,10);
+  const from=new Date(Date.now()-31*24*3600*1000).toISOString().slice(0,10);
+  const url=`https://api.polygon.io/v2/aggs/ticker/${ticker}/range/${mult}/${tspan}/${from}/${to}?adjusted=true&sort=asc&limit=5000&apiKey=${KEYS.poly}`;
+  setDot('d-py','spin');
+  const res=await fetch(url);
+  const json=await res.json();
+  if(json.status==='ERROR'||json.resultsCount===0) throw new Error('Polygon: '+json.status);
+  setDot('d-py','ok');
+  return json.results.map(r=>({
+    time:Math.floor(r.t/1000), open:r.o, high:r.h, low:r.l, close:r.c,
+  })).filter(b=>!isNaN(b.open));
+}
+
+// ─────────────────────────────────────────────
+//  MAIN FETCH ORCHESTRATOR
+// ─────────────────────────────────────────────
+async function fetchAll(){
+  $('btnf').disabled=true;
+  setMsg('Iniciando fetch...');
+  prog(5);
+  showOv('Conectando con Twelve Data...','Descargando XAU/USD y DXY · 30 días de velas OHLC');
+
+  // ── GOLD via Twelve Data ──────────────────
+  try{
+    setMsg('TD: descargando XAU/USD...');
+    prog(20);
+    const gjson=await tdFetch('XAU/USD', TF_TD[TF]);
+    goldBars=parseTD(gjson);
+    if(goldBars.length<10) throw new Error('Datos insuficientes TD Gold: '+goldBars.length);
+    setMsg(`✓ Gold: ${goldBars.length} barras`);
+  }catch(e){
+    setDot('d-td','err');
+    setMsg('TD Gold falló: '+e.message+' · intentando AV...');
+    try{
+      const gjson=await avFetch('XAU','USD',TF_AV[TF]);
+      goldBars=parseAV(gjson, TF_AV[TF]);
+      setMsg(`✓ AV Gold: ${goldBars.length} barras`);
+    }catch(e2){
+      setMsg('AV Gold falló: '+e2.message+' · intentando Polygon...');
+      try{
+        goldBars=await polyFetch('C:XAUUSD', TF);
+        setMsg(`✓ Polygon Gold: ${goldBars.length} barras`);
+      }catch(e3){
+        setMsg('⚠ Todos los APIs fallaron para Gold · usando simulación');
+        goldBars=[];
+      }
+    }
+  }
+
+  prog(55);
+
+  // ── DXY via Twelve Data ───────────────────
+  try{
+    setMsg('TD: descargando DXY...');
+    const djson=await tdFetch('DXY', TF_TD[TF]);
+    dxyBars=parseTD(djson);
+    if(dxyBars.length<10) throw new Error('Datos insuficientes TD DXY: '+dxyBars.length);
+    setMsg(`✓ DXY: ${dxyBars.length} barras`);
+    setDot('d-td','ok');
+  }catch(e){
+    setDot('d-td','err');
+    setMsg('TD DXY falló: '+e.message+' · intentando AV EUR/USD proxy...');
+    try{
+      // Fallback: EUR/USD inverted = DXY proxy (-0.95 corr)
+      const djson=await avFetch('EUR','USD',TF_AV[TF]);
+      const eurusd=parseAV(djson, TF_AV[TF]);
+      dxyBars=invertBars(eurusd);
+      setMsg(`✓ AV DXY proxy (EUR/USD inv): ${dxyBars.length} barras`);
+    }catch(e2){
+      setMsg('⚠ DXY fallback falló · usando simulación DXY');
+      dxyBars=[];
+    }
+  }
+
+  prog(80);
+
+  // ── Update UI ─────────────────────────────
+  const hasBoth = goldBars.length>0 && dxyBars.length>0;
+  if(hasBoth){
+    dataSource='real';
+    $('dstag').textContent='✓ DATOS REALES';
+    $('dstag').className='dstag ds-real';
+    $('livebadge').textContent='● DATOS REALES';
+    $('livebadge').className='badge bl';
+  }else{
+    dataSource='sim';
+    useSim();
+  }
+
+  updateTickers();
+  updateBarInfo();
+  prog(100);
+
+  const now=new Date();
+  $('lfetch').textContent='último fetch: '+now.toUTCString().slice(17,25)+' UTC';
+  setMsg(hasBoth ? `✓ ${goldBars.length} Gold + ${dxyBars.length} DXY barras cargadas` : '⚠ usando simulación');
+
+  hideOv();
+  runBT();
+  startPolling();
+  checkSignal();
+  $('btnf').disabled=false;
+}
+
+// ─────────────────────────────────────────────
+//  LIVE POLLING
+// ─────────────────────────────────────────────
+function startPolling(){
+  if(polling) clearInterval(polling);
+  const ms=TF*60*1000;
+  $('poll-info').textContent=`c/ ${TF<60?TF+'m':'1H'}`;
+  polling=setInterval(async()=>{
+    const h=new Date().getUTCHours();
+    if(h>=20&&h<24){
+      setMsg('Auto-polling...');
+      // Bust cache for latest candle only
+      localStorage.removeItem(`td_XAU/USD_${TF_TD[TF]}`);
+      localStorage.removeItem(`td_DXY_${TF_TD[TF]}`);
+      await fetchAll();
+    }
+  }, ms);
+}
+
+// ─────────────────────────────────────────────
+//  CURRENT SIGNAL CHECK + NOTIFICATION
+// ─────────────────────────────────────────────
+function checkSignal(){
+  if(!goldBars.length||!dxyBars.length) return;
+  const box=$('alertbox');
+  const h=new Date().getUTCHours();
+  const g=goldBars[goldBars.length-1];
+  const d=dxyBars[dxyBars.length-1];
+
+  if(h>=21&&h<23){
+    const gr=g.close<g.open;
+    const dr=d.close<d.open;
+    if(gr&&dr){
+      const csz=Math.abs(g.close-g.open);
+      const slp=(g.close-csz*SL).toFixed(2);
+      const tpp=(g.close+csz*TP).toFixed(2);
+      box.style.display='block'; box.className='buy';
+      box.innerHTML=`⚡ SEÑAL ACTIVA — BUY GOLD · 
+        Entrada ~$${g.close.toFixed(2)} · SL: $${slp} · TP: $${tpp} · 
+        Tamaño vela: ${csz.toFixed(2)} pts · ${new Date().toUTCString().slice(17,25)} UTC`;
+      if(Notification.permission==='granted'){
+        new Notification('⚡ SEÑAL DXY+GOLD',{
+          body:`BUY GOLD · SL $${slp} · TP $${tpp}`,
+        });
+      }
+    }else{
+      box.style.display='block'; box.className='wait';
+      box.innerHTML=`⏳ SESIÓN ACTIVA 21-23 UTC — esperando señal · 
+        GOLD ${gr?'🔴 rojo ✓':'🟢 verde ✗'} · DXY ${dr?'🔴 rojo ✓':'🟢 verde ✗'} · 
+        ${new Date().toUTCString().slice(17,25)} UTC`;
+    }
+  }else{
+    box.style.display='none';
+  }
+}
+
+// ─────────────────────────────────────────────
+//  SIMULATION FALLBACK
+// ─────────────────────────────────────────────
+function useSim(){
+  dataSource='sim';
+  $('dstag').textContent='⚡ SIM';
+  $('dstag').className='dstag ds-sim';
+  $('livebadge').textContent='● SIMULADO';
+  $('livebadge').className='badge be';
+
+  function rn(m,s){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();
+    return m+s*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+  function gen(n,p0,vol,dr){
+    const b=[],now=Math.floor(Date.now()/1000),st=now-n*TF*60;
+    let p=p0;
+    for(let i=0;i<n;i++){
+      const ts=st+i*TF*60, dow=new Date(ts*1000).getUTCDay();
+      if(dow===0||dow===6)continue;
+      const mv=rn(dr*vol*0.08,vol),cl=p+mv,body=Math.abs(mv),w=body*(0.3+Math.random());
+      b.push({time:ts,open:p,close:cl,high:Math.max(p,cl)+w*Math.random(),low:Math.min(p,cl)-w*Math.random()});
+      p=cl;
+    }
+    return b;
+  }
+  const n=Math.floor(1440/TF)*30;
+  goldBars=gen(n,3050,12,0.018);
+  dxyBars=gen(n,104.2,0.22,-0.004);
+}
+
+// ─────────────────────────────────────────────
+//  BACKTEST ENGINE
+// ─────────────────────────────────────────────
+function runBT(){
+  if(!goldBars.length||!dxyBars.length){ useSim(); }
+
+  // Build time-aligned pairs
+  const dmap=new Map(dxyBars.map(b=>[b.time,b]));
+  const half=TF*30;
+  const pairs=[];
+  for(const g of goldBars){
+    let d=dmap.get(g.time);
+    if(!d){
+      // nearest within half TF
+      let best=null,bd=Infinity;
+      for(const [t,b] of dmap){
+        const diff=Math.abs(t-g.time);
+        if(diff<bd&&diff<=half){bd=diff;best=b;}
+      }
+      d=best;
+    }
+    if(d) pairs.push({g,d});
+  }
+
+  const inSess=ts=>{const h=new Date(ts*1000).getUTCHours();return h>=21&&h<23;};
+  const trades=[];
+  let i=1, len=pairs.length;
+
+  while(i<len-EXP-2){
+    const {g,d}=pairs[i];
+    if(!inSess(g.time)){i++;continue;}
+    const gr=g.close<g.open;
+    const dr=d.close<d.open;
+    if(gr&&dr){
+      const ei=i+1; if(ei>=len)break;
+      const csz=Math.abs(g.close-g.open);
+      if(csz<0.05){i++;continue;}
+      const entry=pairs[ei].g.open;
+      const sl=entry-csz*SL, tp=entry+csz*TP;
+      let res='EXP',pnl=0,bo=0;
+      for(let j=ei+1;j<=ei+EXP&&j<len;j++){
+        bo++;
+        const gb=pairs[j].g;
+        if(gb.high>=tp){res='TP';pnl=+(csz*TP).toFixed(2);break;}
+        if(gb.low<=sl) {res='SL';pnl=-(csz*SL).toFixed(2);break;}
+      }
+      if(res==='EXP') pnl=+(pairs[Math.min(ei+EXP,len-1)].g.close-entry).toFixed(2);
+      trades.push({
+        n:trades.length+1, sigTime:g.time, tf:TF<60?TF+'m':'1H',
+        entry:+entry.toFixed(2), sl:+sl.toFixed(2), tp:+tp.toFixed(2),
+        csz:+csz.toFixed(2), dxyV:+(Math.abs(d.close-d.open)).toFixed(5),
+        res, pnl, bo,
+      });
+      i=ei+bo+1;
+    }else i++;
+  }
+
+  // Stats
+  const tpC=trades.filter(t=>t.res==='TP').length;
+  const slC=trades.filter(t=>t.res==='SL').length;
+  const exC=trades.filter(t=>t.res==='EXP').length;
+  const wr=tpC+slC>0?((tpC/(tpC+slC))*100).toFixed(1)+'%':'N/A';
+  const pf=slC>0?((tpC*TP)/(slC*SL)).toFixed(2):'∞';
+
+  $('s-tot').textContent=trades.length;
+  $('s-tp').textContent=tpC;
+  $('s-sl').textContent=slC;
+  $('s-ex').textContent=exC;
+  $('s-wr').textContent=wr;
+  $('s-pf').textContent=pf;
+  $('tk-sig').textContent=trades.length;
+  $('tk-wr').textContent='WR: '+wr;
+  $('btsum').textContent=`${trades.length} ops · TP:${tpC} SL:${slC} EXP:${exC} · WR ${wr} · PF ${pf} · ${dataSource==='real'?'✓ Alpha Vantage/Twelve Data REALES':'⚡ SIMULACIÓN'}`;
+  $('sl-exp').textContent=SL+'× vela';
+  $('tp-exp').textContent=TP+'× vela';
+  $('exp-exp').textContent=EXP+' velas';
+
+  drawEq(trades);
+
+  // Table
+  const tbody=$('tbt');
+  tbody.innerHTML='';
+  let eq=0;
+  trades.forEach(t=>{
+    eq+=t.pnl;
+    const dt=new Date(t.sigTime*1000).toISOString().slice(0,16).replace('T',' ');
+    const rc=t.res==='TP'?'tp':t.res==='SL'?'sl2':'ex';
+    tbody.innerHTML+=`<tr>
+      <td class="cm">${t.n}</td><td>${dt}</td>
+      <td class="cs">${t.tf}</td>
+      <td class="cs">$${t.entry}</td>
+      <td class="sl2">$${t.sl}</td>
+      <td class="tp">$${t.tp}</td>
+      <td class="cm">${t.csz}</td>
+      <td class="cd">${t.dxyV}</td>
+      <td class="${rc}">${t.res}</td>
+      <td class="cm">${t.bo}</td>
+      <td class="${t.pnl>=0?'pp':'pn'}">${t.pnl>=0?'+':''}${t.pnl}</td>
+      <td class="${eq>=0?'pp':'pn'}">${eq.toFixed(2)}</td>
+    </tr>`;
+  });
+  if(!trades.length){
+    tbody.innerHTML=`<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:18px">
+      Sin señales en los datos cargados. Prueba otro timeframe.</td></tr>`;
+  }
+}
+
+// ─────────────────────────────────────────────
+//  EQUITY CURVE CANVAS
+// ─────────────────────────────────────────────
+function drawEq(trades){
+  const cv=$('eqcv'),ctx=cv.getContext('2d');
+  const dpr=devicePixelRatio||1;
+  cv.width=cv.offsetWidth*dpr; cv.height=cv.offsetHeight*dpr; ctx.scale(dpr,dpr);
+  const W=cv.offsetWidth,H=cv.offsetHeight;
+  let eq=0;
+  const pts=[0,...trades.map(t=>{eq+=t.pnl;return eq;})];
+  if(pts.length<2){ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);return;}
+  const mn=Math.min(...pts),mx=Math.max(...pts),rng=mx-mn||1;
+  const pad=12,xs=(W-pad*2)/(pts.length-1);
+  const yf=v=>pad+(1-(v-mn)/rng)*(H-pad*2);
+  ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+  // zero line
+  ctx.strokeStyle='rgba(72,79,88,.35)';ctx.lineWidth=1;ctx.setLineDash([3,4]);
+  ctx.beginPath();ctx.moveTo(pad,yf(0));ctx.lineTo(W-pad,yf(0));ctx.stroke();ctx.setLineDash([]);
+  // fill
+  const last=pts[pts.length-1];
+  const gr=ctx.createLinearGradient(0,0,0,H);
+  gr.addColorStop(0,last>=0?'rgba(63,185,80,.18)':'rgba(248,81,73,.18)');
+  gr.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=gr;
+  ctx.beginPath();ctx.moveTo(pad,yf(pts[0]));
+  pts.forEach((v,i)=>ctx.lineTo(pad+i*xs,yf(v)));
+  ctx.lineTo(pad+(pts.length-1)*xs,H);ctx.lineTo(pad,H);ctx.closePath();ctx.fill();
+  // line
+  ctx.strokeStyle=last>=0?'#3fb950':'#f85149';ctx.lineWidth=2;
+  ctx.beginPath();pts.forEach((v,i)=>{const x=pad+i*xs,y=yf(v);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
+  // dots
+  trades.forEach((t,i)=>{
+    let c=0;for(let j=0;j<=i;j++)c+=trades[j].pnl;
+    ctx.beginPath();ctx.arc(pad+(i+1)*xs,yf(c),2.5,0,Math.PI*2);
+    ctx.fillStyle=t.res==='TP'?'#3fb950':t.res==='SL'?'#f85149':'#8b949e';ctx.fill();
+  });
+  // label
+  ctx.fillStyle='rgba(72,79,88,.7)';ctx.font=`9px 'JetBrains Mono',monospace`;
+  const tag=dataSource==='real'?`Equity Curve · Twelve Data reales · P&L pts`:'Equity Curve · Simulación estadística';
+  ctx.fillText(tag,pad+4,11);
+}
+
+// ─────────────────────────────────────────────
+//  TV WIDGET RELOAD
+// ─────────────────────────────────────────────
+function reloadWidgets(){
+  const iv=TF_TV[TF], lbl=TF<60?TF+'m':'1H';
+  [
+    {id:'wd', lbl:'lbl-d', sym:'TVC:DXY',  link:'https://www.tradingview.com/symbols/TVC-DXY/',  txt:'DXY chart', bg:'rgba(13,17,23,1)', side:true, cmp:[], save:false},
+    {id:'wg', lbl:'lbl-g', sym:'TVC:GOLD', link:'https://www.tradingview.com/symbols/TVC-GOLD/', txt:'GOLD chart',bg:'rgba(13,17,23,1)', side:true, cmp:[], save:false},
+    {id:'ws', lbl:'lbl-s', sym:'TVC:GOLD', link:'https://www.tradingview.com/symbols/TVC-GOLD/', txt:'GOLD+DXY chart',bg:'rgba(7,9,13,1)',side:false,
+     cmp:[{"symbol":"TVC:DXY","position":"NewPriceScale"}], save:true},
+  ].forEach(d=>{
+    const w=$(d.id); if(!w)return;
+    w.innerHTML='';
+    const cont=document.createElement('div');
+    cont.className='tradingview-widget-container';cont.style.cssText='height:100%;width:100%;';
+    const inner=document.createElement('div');
+    inner.className='tradingview-widget-container__widget';inner.style.cssText='height:calc(100% - 20px);width:100%;';
+    cont.appendChild(inner);
+    const copy=document.createElement('div');
+    copy.className='tradingview-widget-copyright';
+    copy.innerHTML=`<a href="${d.link}" rel="noopener nofollow" target="_blank"><span class="blue-text">${d.txt}</span></a> by TradingView`;
+    cont.appendChild(copy);
+    const cfg={autosize:true,symbol:d.sym,interval:iv,timezone:'Etc/UTC',theme:'dark',style:'1',locale:'en',
+      backgroundColor:d.bg,gridColor:'rgba(28,35,51,0.6)',allow_symbol_change:false,calendar:false,
+      details:false,hide_side_toolbar:d.side,hide_top_toolbar:false,hide_legend:false,hide_volume:false,
+      hotlist:false,save_image:d.save,withdateranges:true,compareSymbols:d.cmp,studies:[],watchlist:[]};
+    const scr=document.createElement('script');
+    scr.type='text/javascript';
+    scr.src='https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+    scr.async=true;scr.textContent=JSON.stringify(cfg);
+    cont.appendChild(scr);w.appendChild(cont);
+    $(d.lbl).textContent=lbl;
+  });
+  $('tk-tf').textContent=TF<60?TF+'m':'1H';
+}
+
+// ─────────────────────────────────────────────
+//  TICKER UPDATE
+// ─────────────────────────────────────────────
+function updateTickers(){
+  if(goldBars.length>=2){
+    const g=goldBars[goldBars.length-1],gp=goldBars[goldBars.length-2];
+    $('tk-g').textContent='$'+g.close.toFixed(2);
+    const gc=((g.close-gp.close)/gp.close*100).toFixed(3);
+    $('tk-gc').innerHTML=`<span class="${+gc>=0?'pos':'neg'}">${+gc>=0?'+':''}${gc}%</span>`;
+  }
+  if(dxyBars.length>=2){
+    const d=dxyBars[dxyBars.length-1],dp=dxyBars[dxyBars.length-2];
+    $('tk-d').textContent=d.close.toFixed(4);
+    const dc=((d.close-dp.close)/dp.close*100).toFixed(4);
+    $('tk-dc').innerHTML=`<span class="${+dc>=0?'pos':'neg'}">${+dc>=0?'+':''}${dc}%</span>`;
+  }
+}
+
+function updateBarInfo(){
+  const minLen=Math.min(goldBars.length,dxyBars.length);
+  $('tk-bars').textContent=minLen+(dataSource==='sim'?' (sim)':' ✓');
+  if(minLen>0&&dataSource==='real'){
+    const from=new Date(Math.max(goldBars[0]?.time||0,dxyBars[0]?.time||0)*1000).toISOString().slice(0,10);
+    const to=new Date(Math.min(goldBars[goldBars.length-1]?.time||0,dxyBars[dxyBars.length-1]?.time||0)*1000).toISOString().slice(0,10);
+    $('tk-rng').textContent=from+' → '+to;
+  }else{
+    $('tk-rng').textContent=dataSource==='sim'?'Simulación 30 días':'Cargando...';
+  }
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function $(id){return document.getElementById(id);}
+function setDot(id,st){$(id).className='adot '+st;}
+function setMsg(m){$('apimsg').textContent=m;}
+function prog(p){$('ov-prog').style.width=p+'%';}
+function showOv(msg,sub){$('ov-msg').textContent=msg;$('ov-sub').textContent=sub;$('ov').classList.remove('hidden');}
+function hideOv(){setTimeout(()=>$('ov').classList.add('hidden'),400);}
+
+// ─────────────────────────────────────────────
+//  CONTROLS WIRING
+// ─────────────────────────────────────────────
+document.querySelectorAll('#tg .btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#tg .btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); TF=parseInt(b.dataset.tf);
+  goldBars=[]; dxyBars=[];
+  reloadWidgets(); fetchAll();
+}));
+['sl','tp','ex'].forEach((key,i)=>{
+  const gid=['slg','tpg','exg'][i];
+  document.querySelectorAll(`#${gid} .btn`).forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll(`#${gid} .btn`).forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    if(key==='sl')SL=parseFloat(b.dataset.sl);
+    if(key==='tp')TP=parseFloat(b.dataset.tp);
+    if(key==='ex')EXP=parseInt(b.dataset.exp);
+  }));
+});
+
+window.addEventListener('resize',()=>{
+  const rows=Array.from(document.querySelectorAll('#tbt tr'));
+  if(rows.length)drawEq(rows.map(r=>{const c=r.querySelectorAll('td');
+    return{res:c[8]?.textContent,pnl:parseFloat(c[10]?.textContent)||0};}).filter(t=>t.res));
+});
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  if(Notification&&Notification.permission==='default') Notification.requestPermission();
+  // Show sim immediately, then fetch real
+  useSim(); runBT(); hideOv();
+  setTimeout(()=>fetchAll(), 600);
+});
+</script>
+</body>
+</html>

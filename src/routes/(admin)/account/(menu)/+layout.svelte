@@ -22,6 +22,13 @@
       icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>`,
     },
     {
+      href: "/account/signal",
+      section: "signal",
+      label: "DXY Signal",
+      accent: true,
+      icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>`,
+    },
+    {
       href: "/account/billing",
       section: "billing",
       label: "Billing",
@@ -60,8 +67,8 @@
           display:flex;align-items:center;gap:10px;
           padding:9px 14px;font-family:'JetBrains Mono',monospace;
           font-size:.68rem;text-decoration:none;
-          border-left:2px solid {adminSection === item.section ? 'var(--gold)' : 'transparent'};
-          color:{adminSection === item.section ? 'var(--gold)' : 'var(--muted)'};
+          border-left:2px solid {adminSection === item.section ? (item.accent ? 'var(--gold)' : 'var(--gold)') : 'transparent'};
+          color:{adminSection === item.section ? 'var(--gold)' : item.accent ? 'var(--gold)' : 'var(--muted)'};
           background:{adminSection === item.section ? 'var(--gdim)' : 'transparent'};
           transition:all .15s;
         ">
@@ -70,6 +77,9 @@
             {@html item.icon}
           </svg>
           {item.label}
+          {#if item.accent && adminSection !== item.section}
+            <span class="ldot" style="width:5px;height:5px;margin-left:auto;"></span>
+          {/if}
         </a>
       {/each}
     </nav>
