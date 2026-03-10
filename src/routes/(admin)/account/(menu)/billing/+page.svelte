@@ -23,11 +23,13 @@
   <title>Billing</title>
 </svelte:head>
 
-<h1 class="text-2xl font-bold mb-2">
-  {data.isActiveCustomer ? "Billing" : "Select a Plan"}
-</h1>
-<div>
-  View our <a href="/pricing" target="_blank" class="link">pricing page</a> for details.
+<div style="margin-bottom:20px;">
+  <h1 style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--text);">
+    {data.isActiveCustomer ? "Billing" : "Select a Plan"}
+  </h1>
+  <p style="font-size:.62rem;color:var(--muted);margin-top:3px;">
+    View our <a href="/pricing" target="_blank" style="color:var(--dxy);text-decoration:none;">pricing page</a> for details.
+  </p>
 </div>
 
 {#if !data.isActiveCustomer}

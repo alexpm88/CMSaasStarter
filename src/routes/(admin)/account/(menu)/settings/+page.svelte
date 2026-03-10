@@ -14,7 +14,10 @@
   <title>Settings</title>
 </svelte:head>
 
-<h1 class="text-2xl font-bold mb-6">Settings</h1>
+<div style="margin-bottom:20px;">
+  <h1 style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--text);">Settings</h1>
+  <p style="font-size:.62rem;color:var(--muted);margin-top:3px;">Manage your profile, email, password, and subscription.</p>
+</div>
 
 <SettingsModule
   title="Profile"

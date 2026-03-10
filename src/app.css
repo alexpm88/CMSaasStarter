@@ -1,88 +1,262 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
 
-@plugin '@tailwindcss/typography';
-@plugin "daisyui" {
-  /* Disable all other themes which forces the default theme created below. You can add a dark mode theme using daisyui if you like, and it will automatically use it when the user's system is in dark mode. Docs: https://daisyui.com/docs/themes/ */
-  themes: false;
+/* ─── Dashboard Design Tokens ──────────────────────────────── */
+:root {
+  --bg:        #07090d;
+  --surface:   #0d1117;
+  --s2:        #111820;
+  --border:    #1c2333;
+  --text:      #c9d1d9;
+  --muted:     #484f58;
+
+  --gold:      #f0b429;
+  --gdim:      rgba(240,180,41,.13);
+  --dxy:       #58a6ff;
+  --ddim:      rgba(88,166,255,.11);
+  --green:     #3fb950;
+  --grdim:     rgba(63,185,80,.1);
+  --red:       #f85149;
+  --rdim:      rgba(248,81,73,.1);
+  --sig:       #bc8cff;
+  --sdim:      rgba(188,140,255,.12);
+  --orange:    #e3702a;
 }
 
-@plugin "daisyui/theme" {
-  name: "saasstartertheme";
-  default: true; /* set as default */
-  prefersdark: false; /* set as default dark mode (prefers-color-scheme:dark) */
-  color-scheme: light; /* color of browser-provided UI */
+/* ─── Base reset ────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 
-  --color-primary: #180042;
-  --color-primary-content: #fefbf6;
-  --color-secondary: #c7b9f8;
-  --color-secondary-content: oklch(95% 0 0);
-  --color-accent: #db2777;
-  --color-accent-content: #180042;
-  --color-neutral: #180042;
-  --color-neutral-content: #fefbf6;
-  --color-base-100: #fefbf6;
-  --color-base-200: #faedd6;
-  --color-base-300: oklch(92% 0.04 240);
-  --color-base-content: #180042;
-  --color-info: oklch(70% 0.2 220);
-  --color-info-content: oklch(98% 0.01 220);
-  --color-success: #37d399;
-  --color-success-content: oklch(98% 0.01 140);
-  --color-warning: oklch(80% 0.25 80);
-  --color-warning-content: oklch(20% 0.05 80);
-  --color-error: #f77272;
-  --color-error-content: oklch(98% 0.01 30);
-
-  /* border radius */
-  --radius-selector: 1rem;
-  --radius-field: 0.5rem;
-  --radius-box: 0.5rem;
-
-  /* base sizes */
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
-
-  /* border size */
-  --border: 1px;
-
-  /* effects */
-  --depth: 1;
-  --noise: 0;
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  overflow-x: hidden;
+  min-height: 100vh;
 }
 
-/*
-  Tailwind CSS v4 Migration:
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
-  }
+/* ─── Typography helpers ────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6,
+.font-display {
+  font-family: 'Syne', sans-serif;
 }
 
-a {
-  @apply cursor-pointer;
+a { cursor: pointer; }
+
+/* ─── Badges ────────────────────────────────────────────────── */
+.badge-gold  { color: var(--gold); border-color: var(--gold); background: var(--gdim); }
+.badge-dxy   { color: var(--dxy);  border-color: var(--dxy);  background: var(--ddim); }
+.badge-sig   { color: var(--sig);  border-color: var(--sig);  background: var(--sdim); }
+.badge-live  { color: var(--green);border-color: var(--green);background: var(--grdim); }
+.badge-err   { color: var(--red);  border-color: var(--red);  background: var(--rdim); }
+
+.ds-badge {
+  font-size: .59rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
 }
 
-/* Hack to temporarily solve https://github.com/supabase/auth-ui/issues/219 */
-.authBtn {
-  @apply btn;
+/* ─── Glowing dot ───────────────────────────────────────────── */
+.ldot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px var(--gold);
+  display: inline-block;
+  flex-shrink: 0;
+  animation: blink 2s ease-in-out infinite;
 }
-button[disabled].authBtn {
-  font-size: 0.001px;
-  filter: brightness(65%);
+@keyframes blink { 0%,100%{ opacity:1 } 50%{ opacity:.2 } }
+@keyframes spin   { to{ transform:rotate(360deg) } }
+
+/* ─── Surface cards ─────────────────────────────────────────── */
+.ds-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
 }
-button[disabled].authBtn::before {
-  font-size: 14px;
-  content: "Loading...";
-  color: oklch(var(--pc));
+.ds-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--s2);
 }
+
+/* ─── Section divider ───────────────────────────────────────── */
+.ds-shd {
+  font-family: 'Syne', sans-serif;
+  font-size: .66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ds-shd::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ─── Stat tile ─────────────────────────────────────────────── */
+.ds-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 11px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ds-stat-label {
+  font-size: .56rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+.ds-stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+.ds-stat-sub { font-size: .57rem; color: var(--muted); }
+
+/* ─── Buttons ───────────────────────────────────────────────── */
+.ds-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .67rem;
+  padding: 5px 14px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.ds-btn:hover { border-color: var(--gold); color: var(--gold); }
+.ds-btn-primary {
+  background: var(--gold);
+  color: #000;
+  border: none;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: .72rem;
+  padding: 6px 18px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: opacity .15s;
+  white-space: nowrap;
+}
+.ds-btn-primary:hover { opacity: .85; }
+.ds-btn-green {
+  background: linear-gradient(135deg,#3fb950,#2ea043);
+  border: none;
+  color: #fff;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: .72rem;
+  padding: 6px 18px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: opacity .15s;
+}
+.ds-btn-green:hover { opacity: .8; }
+
+/* ─── Tables ────────────────────────────────────────────────── */
+.ds-table { width: 100%; border-collapse: collapse; font-size: .63rem; }
+.ds-table thead th {
+  padding: 5px 11px;
+  text-align: left;
+  color: var(--muted);
+  font-weight: 400;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-size: .55rem;
+  background: var(--s2);
+}
+.ds-table tbody tr { border-bottom: 1px solid rgba(28,35,51,.4); transition: background .1s; }
+.ds-table tbody tr:hover { background: rgba(255,255,255,.02); }
+.ds-table tbody td { padding: 5px 11px; }
+
+/* ─── Form inputs ───────────────────────────────────────────── */
+.ds-input {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .75rem;
+  padding: 8px 12px;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color .15s;
+  width: 100%;
+}
+.ds-input:focus { border-color: var(--gold); }
+.ds-input::placeholder { color: var(--muted); }
+
+/* ─── Note block ────────────────────────────────────────────── */
+.ds-note {
+  background: rgba(88,166,255,.05);
+  border: 1px solid rgba(88,166,255,.15);
+  border-radius: 6px;
+  padding: 9px 13px;
+  font-size: .61rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+.ds-note strong { color: var(--dxy); }
+
+/* ─── Sidebar nav ───────────────────────────────────────────── */
+.ds-sidenav {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  min-height: 100vh;
+  width: 220px;
+  padding: 0;
+  flex-shrink: 0;
+}
+.ds-sidenav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem;
+  color: var(--muted);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: all .15s;
+}
+.ds-sidenav-link:hover,
+.ds-sidenav-link.active {
+  color: var(--gold);
+  border-left-color: var(--gold);
+  background: var(--gdim);
+}
+
+/* ─── Supabase Auth UI overrides ────────────────────────────── */
+.authBtn { background: var(--gold) !important; color: #000 !important; border: none !important; border-radius: 4px !important; font-family: 'Syne', sans-serif !important; font-weight: 700 !important; }
+button[disabled].authBtn { font-size: 0.001px; filter: brightness(65%); }
+button[disabled].authBtn::before { font-size: 14px; content: "Loading..."; color: #000; }
+
+/* ─── Color helpers ─────────────────────────────────────────── */
+.c-gold  { color: var(--gold); }
+.c-dxy   { color: var(--dxy);  }
+.c-sig   { color: var(--sig);  }
+.c-green { color: var(--green);}
+.c-red   { color: var(--red);  }
+.c-muted { color: var(--muted);}
+.c-text  { color: var(--text); }

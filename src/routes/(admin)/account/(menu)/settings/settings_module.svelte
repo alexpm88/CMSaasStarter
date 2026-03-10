@@ -8,12 +8,11 @@
     return errors.includes(name)
   }
 
-  // Page state
   let loading = $state(false)
   let showSuccess = $state(false)
 
   type Field = {
-    inputType?: string // default is "text"
+    inputType?: string
     id: string
     label?: string
     initialValue: string | boolean
@@ -22,7 +21,6 @@
   }
 
   interface Props {
-    // Module context
     editable?: boolean
     dangerous?: boolean
     title?: string
@@ -56,118 +54,122 @@
       await update({ reset: false })
       await applyAction(result)
       loading = false
-      if (result.type === "success") {
-        showSuccess = true
-      }
+      if (result.type === "success") showSuccess = true
     }
   }
 </script>
 
-<div class="card p-6 pb-7 mt-8 max-w-xl flex flex-col md:flex-row shadow-sm">
+<!-- Settings Module Card -->
+<div style="
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  margin-bottom:10px;overflow:hidden;
+">
+  <!-- Card header -->
   {#if title}
-    <div class="text-xl font-bold mb-3 w-48 md:pr-8 flex-none">{title}</div>
+    <div style="
+      padding:10px 16px;border-bottom:1px solid var(--border);
+      background:var(--s2);display:flex;align-items:center;justify-content:space-between;
+    ">
+      <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:.78rem;color:var(--text);">
+        {title}
+      </span>
+      {#if !editable && editButtonTitle && editLink && !showSuccess}
+        <a href={editLink}>
+          <button style="
+            background:transparent;
+            border:1px solid {dangerous ? 'var(--red)' : 'var(--border)'};
+            color:{dangerous ? 'var(--red)' : 'var(--muted)'};
+            font-family:'JetBrains Mono',monospace;font-size:.63rem;
+            padding:3px 12px;border-radius:4px;cursor:pointer;transition:all .15s;
+          "
+            onmouseover={(e)=>(e.currentTarget as HTMLElement).style.borderColor = dangerous ? 'var(--red)' : 'var(--gold)'}
+            onmouseout={(e)=>(e.currentTarget as HTMLElement).style.borderColor = dangerous ? 'var(--red)' : 'var(--border)'}
+          >{editButtonTitle}</button>
+        </a>
+      {/if}
+    </div>
   {/if}
 
-  <div class="w-full min-w-48">
+  <!-- Card body -->
+  <div style="padding:14px 16px;">
     {#if !showSuccess}
       {#if message}
-        <div class="mb-6 {dangerous ? 'alert alert-warning' : ''}">
-          {#if dangerous}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="stroke-current shrink-0 h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              /></svg
-            >
-          {/if}
-
-          <span>{message}</span>
-        </div>
+        <div style="
+          margin-bottom:12px;padding:10px 14px;border-radius:6px;font-size:.67rem;
+          border:1px solid {dangerous ? 'rgba(248,81,73,.3)' : 'var(--border)'};
+          background:{dangerous ? 'rgba(248,81,73,.06)' : 'var(--s2)'};
+          color:{dangerous ? 'var(--red)' : 'var(--muted)'};
+        ">{message}</div>
       {/if}
-      <form
-        class="form-widget flex flex-col"
-        method="POST"
-        action={formTarget}
-        use:enhance={handleSubmit}
-      >
+
+      <form class="form-widget" method="POST" action={formTarget} use:enhance={handleSubmit}
+        style="display:flex;flex-direction:column;gap:10px;">
         {#each fields as field}
-          {#if field.label}
-            <label for={field.id}>
-              <span class="text-sm text-gray-500">{field.label}</span>
-            </label>
-          {/if}
-          {#if editable}
-            <input
-              id={field.id}
-              name={field.id}
-              type={field.inputType ?? "text"}
-              disabled={!editable}
-              placeholder={field.placeholder ?? field.label ?? ""}
-              class="{fieldError($page?.form, field.id)
-                ? 'input-error'
-                : ''} input-sm mt-1 input input-bordered w-full max-w-xs mb-3 text-base py-4"
-              value={$page.form ? $page.form[field.id] : field.initialValue}
-              maxlength={field.maxlength ? field.maxlength : null}
-            />
-          {:else}
-            <div class="text-lg mb-3">{field.initialValue}</div>
-          {/if}
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            {#if field.label}
+              <label for={field.id} style="font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;">
+                {field.label}
+              </label>
+            {/if}
+            {#if editable}
+              <input
+                id={field.id}
+                name={field.id}
+                type={field.inputType ?? "text"}
+                disabled={!editable}
+                placeholder={field.placeholder ?? field.label ?? ""}
+                class="ds-input"
+                style={fieldError($page?.form, field.id) ? 'border-color:var(--red);' : ''}
+                value={$page.form ? $page.form[field.id] : field.initialValue}
+                maxlength={field.maxlength ? field.maxlength : null}
+              />
+            {:else}
+              <span style="font-family:'Syne',sans-serif;font-size:.85rem;color:var(--text);">
+                {field.initialValue}
+              </span>
+            {/if}
+          </div>
         {/each}
 
         {#if $page?.form?.errorMessage}
-          <p class="text-red-700 text-sm font-bold mt-1">
-            {$page?.form?.errorMessage}
-          </p>
+          <p style="color:var(--red);font-size:.65rem;font-weight:600;">{$page?.form?.errorMessage}</p>
         {/if}
 
         {#if editable}
-          <div>
-            <button
-              type="submit"
-              class="ml-auto btn btn-sm mt-3 min-w-[145px] {dangerous
-                ? 'btn-error'
-                : 'btn-primary btn-outline'}"
+          <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+            <button type="submit"
+              style="
+                background:{dangerous ? 'transparent' : 'var(--gold)'};
+                color:{dangerous ? 'var(--red)' : '#000'};
+                border:{dangerous ? '1px solid var(--red)' : 'none'};
+                font-family:'Syne',sans-serif;font-weight:700;font-size:.72rem;
+                padding:6px 20px;border-radius:4px;cursor:pointer;
+                min-width:120px;transition:opacity .15s;
+              "
               disabled={loading}
             >
               {#if loading}
-                <span
-                  class="loading loading-spinner loading-md align-middle mx-3"
-                ></span>
+                <span style="display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;"></span>
               {:else}
                 {saveButtonTitle}
               {/if}
             </button>
           </div>
-        {:else if editButtonTitle && editLink}
-          <!-- !editable -->
-          <a href={editLink} class="mt-1">
-            <button
-              class="btn btn-outline btn-sm {dangerous
-                ? 'btn-error'
-                : ''} min-w-[145px]"
-            >
-              {editButtonTitle}
-            </button>
-          </a>
         {/if}
       </form>
     {:else}
-      <!-- showSuccess -->
-      <div>
-        <div class="text-l font-bold">{successTitle}</div>
-        <div class="text-base">{successBody}</div>
+      <!-- Success state -->
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--green);font-size:.8rem;">{successTitle}</span>
+        <span style="font-size:.67rem;color:var(--muted);">{successBody}</span>
+        <a href="/account/settings" style="margin-top:4px;">
+          <button style="
+            background:transparent;border:1px solid var(--border);
+            color:var(--muted);font-family:'JetBrains Mono',monospace;
+            font-size:.67rem;padding:5px 14px;border-radius:4px;cursor:pointer;
+          ">Return to Settings</button>
+        </a>
       </div>
-      <a href="/account/settings">
-        <button class="btn btn-outline btn-sm mt-3 min-w-[145px]">
-          Return to Settings
-        </button>
-      </a>
     {/if}
   </div>
 </div>

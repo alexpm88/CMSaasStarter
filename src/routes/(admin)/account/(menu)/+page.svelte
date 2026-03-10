@@ -7,82 +7,55 @@
 </script>
 
 <svelte:head>
-  <title>Account</title>
+  <title>Account — Dashboard</title>
 </svelte:head>
 
-<h1 class="text-2xl font-bold mb-1">Dashboard</h1>
-<div class="alert alert-error max-w-lg mt-2">
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    class="stroke-current shrink-0 h-6 w-6"
-    fill="none"
-    viewBox="0 0 24 24"
-    ><path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      stroke-width="2"
-      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-    /></svg
-  >
+<!-- Page header -->
+<div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
   <div>
-    <div class="font-bold">Demo Content</div>
-    <div class="my-2">
-      This page is just a placeholder. Replace this page with your app's content
-      and functionality.
-    </div>
-    <div class="my-2">
-      The <a href="/account/billing" class="link">billing</a> and
-      <a href="/account/settings" class="link">settings</a> pages are functional
-      demos.
-    </div>
+    <h1 style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:var(--text);">Dashboard</h1>
+    <p style="font-size:.62rem;color:var(--muted);margin-top:2px;">Welcome back. Here's an overview of your account.</p>
   </div>
+  <span class="ds-badge badge-live" style="display:flex;align-items:center;gap:5px;padding:3px 10px;">
+    <span class="ldot" style="width:6px;height:6px;"></span> Live
+  </span>
 </div>
 
-<div class="my-6">
-  <h1 class="text-xl font-bold mb-1">Users</h1>
-  <div class="stats shadow-sm stats-vertical sm:stats-horizontal sm:w-[420px]">
-    <div class="stat place-items-center">
-      <div class="stat-title">Downloads</div>
-      <div class="stat-value">31K</div>
-      <div class="stat-desc">↗︎ 546 (2%)</div>
+<!-- Stats grid -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:24px;">
+  {#each [
+    {label:'Downloads',  value:'31K',   sub:'↗ 546 (2%)',  color:'var(--gold)'},
+    {label:'Users',      value:'4,200', sub:'↗ 40 (2%)',   color:'var(--dxy)'},
+    {label:'New Regs',   value:'1,200', sub:'↘ 90 (14%)',  color:'var(--sig)'},
+    {label:'Churned',    value:'42',    sub:'↘ 6 (12%)',   color:'var(--red)'},
+    {label:'Revenue',    value:'$4,200',sub:'↗ $180 (4%)', color:'var(--green)'},
+    {label:'Subscribers',value:'16',    sub:'↘ 1 (7%)',    color:'var(--gold)'},
+  ] as s}
+    <div class="ds-stat">
+      <span class="ds-stat-label">{s.label}</span>
+      <span class="ds-stat-value" style="color:{s.color};font-size:1.3rem;">{s.value}</span>
+      <span class="ds-stat-sub">{s.sub}</span>
     </div>
-
-    <div class="stat place-items-center">
-      <div class="stat-title">Users</div>
-      <div class="stat-value text-secondary">4,200</div>
-      <div class="stat-desc">↗︎ 40 (2%)</div>
-    </div>
-  </div>
+  {/each}
 </div>
-<div class="my-6">
-  <h1 class="text-xl font-bold mb-1">Accounts</h1>
-  <div class="stats shadow-sm stats-vertical sm:stats-horizontal sm:w-[420px]">
-    <div class="stat place-items-center">
-      <div class="stat-title">New Registers</div>
-      <div class="stat-value">1,200</div>
-      <div class="stat-desc">↘︎ 90 (14%)</div>
-    </div>
 
-    <div class="stat place-items-center">
-      <div class="stat-title">Churned Accounts</div>
-      <div class="stat-value">42</div>
-      <div class="stat-desc">↘︎ 6 (12%)</div>
-    </div>
-  </div>
+<!-- Notice -->
+<div class="ds-shd" style="margin-bottom:16px;">Notice</div>
+<div style="
+  padding:14px 16px;border-radius:7px;
+  border:1px solid rgba(248,81,73,.25);background:rgba(248,81,73,.06);
+  font-size:.67rem;color:var(--muted);line-height:1.6;
+">
+  <span style="color:var(--red);font-family:'Syne',sans-serif;font-weight:700;">Demo Content</span> —
+  This page is a placeholder. Replace it with your app's content and functionality.
+  The <a href="/account/billing" style="color:var(--dxy);text-decoration:none;">billing</a> and
+  <a href="/account/settings" style="color:var(--dxy);text-decoration:none;">settings</a> pages are fully functional.
 </div>
-<div class="my-6">
-  <h1 class="text-xl font-bold mb-1">Revenue</h1>
-  <div class="stats shadow-sm stats-vertical sm:stats-horizontal sm:w-[420px]">
-    <div class="stat place-items-center">
-      <div class="stat-title text-success">Revenue</div>
-      <div class="stat-value text-success">$4200</div>
-      <div class="stat-desc">↗︎ $180 (4%)</div>
-    </div>
 
-    <div class="stat place-items-center">
-      <div class="stat-title">New Subscribers</div>
-      <div class="stat-value">16</div>
-      <div class="stat-desc">↘︎ 1 (%7)</div>
-    </div>
-  </div>
+<!-- Quick links -->
+<div class="ds-shd" style="margin:24px 0 14px;">Quick Access</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;">
+  <a href="/account/billing"  class="ds-btn" style="font-size:.67rem;">Billing</a>
+  <a href="/account/settings" class="ds-btn" style="font-size:.67rem;">Settings</a>
+  <a href="/pricing"          class="ds-btn" style="font-size:.67rem;">Pricing</a>
 </div>
